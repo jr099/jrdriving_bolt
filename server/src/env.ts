@@ -1,24 +1,22 @@
-import { config } from 'dotenv';
+import 'dotenv/config';
+import { z } from 'zod';
 
-config();
+const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.string().optional().transform(v => (v ? Number(v) : 4000)),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  AUTH_COOKIE_NAME: z.string().default('jrdriving_token'),
+  AUTH_COOKIE_MAX_AGE: z.string().default('604800').transform(Number),
+});
 
-const numberFromEnv = (value: string | undefined, fallback: number): number => {
-  if (!value) return fallback;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-export const env = {
-  NODE_ENV: process.env.NODE_ENV ?? 'development',
-  PORT: numberFromEnv(process.env.PORT, 4000),
-  DATABASE_URL: process.env.DATABASE_URL,
-  JWT_SECRET: process.env.JWT_SECRET ?? 'change-me',
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? '7d',
-  CORS_ORIGIN: process.env.CORS_ORIGIN,
-  COOKIE_NAME: process.env.AUTH_COOKIE_NAME ?? 'jrdriving_token',
-  COOKIE_MAX_AGE: numberFromEnv(process.env.AUTH_COOKIE_MAX_AGE, 60 * 60 * 24 * 7) * 1000,
-};
-
-if (!env.DATABASE_URL) {
-  console.warn('[env] DATABASE_URL is not defined. The API server will fail to connect to the database.');
+const parsed = schema.safeParse(process.env);
+if (!parsed.success) {
+  console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  process.exit(1);
 }
+
+export const env = parsed.data;
+export const corsOrigins = new Set(env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean));

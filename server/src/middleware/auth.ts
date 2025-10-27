@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export async function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  const token = req.cookies?.[env.COOKIE_NAME];
+  const token = req.cookies?.[env.AUTH_COOKIE_NAME];
 
   if (!token) {
     return res.status(401).json({ message: 'Non authentifié.' });

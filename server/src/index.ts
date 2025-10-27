@@ -1,6 +1,7 @@
 import { app } from './app';
 import { env } from './env';
 
-app.listen(env.PORT, () => {
-  console.log(`🚀 API server ready on port ${env.PORT}`);
+const PORT = env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`API listening on http://localhost:${PORT} (env: ${env.NODE_ENV})`);
 });
