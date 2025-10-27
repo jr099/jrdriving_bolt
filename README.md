@@ -1,229 +1,233 @@
 # jrdriving monorepo
 
-This repository hosts the modernized **JR Driving** SaaS stack:
+Ce dépôt héberge la pile SaaS modernisée **JR Driving** :
 
-- **Next.js** application in `apps/web` for the public site and dashboards.
-- **NestJS** API in `apps/api` that exposes authentication, missions, quotes and admin services backed by MySQL and Drizzle ORM.
-- **Shared TypeScript utilities** in `packages/shared` that are consumed by both the API and the web application.
+- **Application Next.js** dans `apps/web` pour le site public et les tableaux de bord.
+- **API NestJS** dans `apps/api` qui expose l'authentification, les missions, les devis et les services d'administration, reposant sur MySQL et Drizzle ORM.
+- **Utilitaires TypeScript partagés** dans `packages/shared` consommés à la fois par l'API et l'application web.
 
-The project is designed to run locally with Docker on Windows/WSL2 and to be deployed in production on Hostinger (static front-end) plus a Node/Nest host for the API.
+Le projet est conçu pour s'exécuter localement avec Docker sur Windows/WSL2 et pour être déployé en production sur Hostinger (front-end statique) plus un hôte Node/Nest pour l'API.
 
 ---
 
-## 1. Prerequisites
+## 1. Prérequis
 
-| Tool | Version (min) | Notes |
+| Outil | Version (min) | Remarques |
 | ---- | ------------- | ----- |
-| [Node.js](https://nodejs.org/) | 20.x LTS | Required for local builds and the Nest/Next CLIs. |
-| [pnpm](https://pnpm.io/) | 9.x | Enabled automatically through `corepack` (`corepack enable`). |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | latest | Runs the MySQL, API and web containers on Windows (enable WSL2 integration). |
-| [Git](https://git-scm.com/) | any recent | Source control. |
+| [Node.js](https://nodejs.org/) | 20.x LTS | Nécessaire pour les builds locaux et les CLI Nest/Next. |
+| [pnpm](https://pnpm.io/) | 9.x | Activé automatiquement via `corepack` (`corepack enable`). |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | latest | Exécute MySQL, l'API et les conteneurs web sur Windows (activer l'intégration WSL2). |
+| [Git](https://git-scm.com/) | toute version récente | Contrôle de version. |
 
-> 💡 **Windows setup tip**: use **WSL2 (Ubuntu)** for the smoothest experience. Install with `wsl --install`, reboot, then install Docker Desktop and enable the “Use WSL 2 based engine” option.
+> 💡 **Astuce pour Windows** : utilisez **WSL2 (Ubuntu)** pour une expérience plus fluide. Installez avec `wsl --install`, redémarrez, puis installez Docker Desktop et activez l'option « Use WSL 2 based engine ».
 
-### Optional global CLIs
-- `pnpm dlx @nestjs/cli` (Nest scaffolding when working outside Docker)
-- `pnpm dlx drizzle-kit` (running migrations outside package scripts)
+### CLI globaux optionnels
+- `pnpm dlx @nestjs/cli` (scaffolding Nest lorsqu'on travaille hors Docker)
+- `pnpm dlx drizzle-kit` (exécuter des migrations en dehors des scripts de package)
 
 ---
 
-## 2. Repository layout
+## 2. Structure du dépôt
+````markdown
 ```
 jrdriving_bolt/
 ├── apps/
-│   ├── api/        # NestJS project (@jrdriving/api)
-│   └── web/        # Next.js project (@jrdriving/web)
+│   ├── api/        # Projet NestJS (@jrdriving/api)
+│   └── web/        # Projet Next.js (@jrdriving/web)
 ├── packages/
-│   └── shared/     # Reusable types, DTOs and helpers
-├── docker/         # Dockerfiles used by docker-compose
+│   └── shared/     # Types réutilisables, DTOs et helpers
+├── docker/         # Dockerfiles utilisés par docker-compose
 ├── docker-compose.yml
 ├── pnpm-workspace.yaml
-└── .env.example    # Template for environment variables
+└── .env.example    # Modèle pour les variables d'environnement
 ```
+````
 
 ---
 
-## 3. Bootstrap the project
+## 3. Initialiser le projet
 
-1. **Clone the repository**
+1. **Cloner le dépôt**
    ```bash
    git clone <your-fork-url>
    cd jrdriving_bolt
    ```
 
-2. **Install pnpm (if not already available)**
+2. **Installer pnpm (si non disponible)**
    ```bash
    corepack enable
    corepack prepare pnpm@9.12.0 --activate
    ```
 
-3. **Install workspace dependencies** (optional when working outside Docker)
+3. **Installer les dépendances du workspace** (optionnel si vous travaillez hors Docker)
    ```bash
    pnpm install
    ```
 
-4. **Create your environment file**
+4. **Créer votre fichier d'environnement**
    ```bash
    cp .env.example .env
    ```
-   Adjust secrets, database credentials and public URLs as needed.
+   Ajustez les secrets, les identifiants de base de données et les URL publiques selon vos besoins.
 
 ---
 
-## 4. Local development (Docker + MySQL)
+## 4. Développement local (Docker + MySQL)
 
-The repository ships with a ready-to-run Docker Compose stack that starts MySQL, the Nest API and the Next.js front.
+Le dépôt inclut une stack Docker Compose prête à l'emploi qui démarre MySQL, l'API Nest et le front Next.js.
 
 ```bash
 docker compose up --build
 ```
 
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:4000/api
-- **MySQL**: localhost:3306 (user/password from `.env`)
+- **Frontend** : http://localhost:3000
+- **API** : http://localhost:4000/api
+- **MySQL** : localhost:3306 (utilisateur/mot de passe depuis `.env`)
 
-### Installing missing dependencies inside containers
-The `docker-compose.yml` commands already run `pnpm install` inside each service. If you add new packages:
+### Installer des dépendances manquantes dans les conteneurs
+Les commandes dans `docker-compose.yml` exécutent déjà `pnpm install` dans chaque service. Si vous ajoutez de nouveaux packages :
 ```bash
 docker compose exec api pnpm add <package>
 docker compose exec web pnpm add <package>
 ```
-(The lockfile will be updated inside the mounted workspace.)
+(Le fichier lock sera mis à jour dans l'espace de travail monté.)
 
-### Applying database migrations
-Drizzle migrations are generated from the schema in `apps/api/src/database/schema.ts`.
+### Appliquer les migrations de base de données
+Les migrations Drizzle sont générées à partir du schéma dans `apps/api/src/database/schema.ts`.
 
 ```bash
-# Generate SQL migration files
+# Générer les fichiers SQL de migration
 docker compose exec api pnpm db:generate
 
-# Apply migrations to the running MySQL instance
+# Appliquer les migrations sur l'instance MySQL en cours d'exécution
 docker compose exec api pnpm db:migrate
 ```
 
-### Running tests & linters
+### Exécuter les tests & linters
 ```bash
-# API tests (Jest)
+# Tests API (Jest)
 docker compose exec api pnpm test
 
-# API lint
+# Lint API
 docker compose exec api pnpm lint
 
-# Web lint
+# Lint Web
 docker compose exec web pnpm lint
 ```
 
-To stop the stack:
+Pour arrêter la stack :
 ```bash
 docker compose down
 ```
-Add `-v` to remove MySQL volumes for a clean slate.
+Ajoutez `-v` pour supprimer les volumes MySQL pour repartir d'une base propre.
 
 ---
 
-## 5. Manual local development (without Docker)
-This is useful if you prefer running the services directly on your machine.
+## 5. Développement local manuel (sans Docker)
+Utile si vous préférez exécuter les services directement sur votre machine.
 
-1. Start MySQL locally and create the `jrdriving` database with the user/password defined in `.env`.
-2. Install dependencies if not already done:
+1. Démarrez MySQL localement et créez la base de données `jrdriving` avec l'utilisateur/mot de passe définis dans `.env`.
+2. Installez les dépendances si ce n'est pas déjà fait :
    ```bash
    pnpm install
    ```
-3. Apply migrations:
+3. Appliquez les migrations :
    ```bash
    pnpm --filter @jrdriving/api db:migrate
    ```
-4. Run the API:
+4. Lancez l'API :
    ```bash
    pnpm --filter @jrdriving/api start:dev
    ```
-5. In a second terminal, run the Next.js dev server:
+5. Dans un second terminal, lancez le serveur dev Next.js :
    ```bash
    pnpm --filter @jrdriving/web dev
    ```
 
 ---
 
-## 6. Production builds & deployment
+## 6. Builds de production & déploiement
 
-### 6.1 Building artifacts
+### 6.1 Générer les artefacts
 ```bash
 pnpm install --frozen-lockfile
 
-# Build the Nest API (outputs to apps/api/dist)
+# Builder l'API Nest (sortie dans apps/api/dist)
 pnpm --filter @jrdriving/api build
 
-# Build the Next.js app (outputs to apps/web/.next)
+# Builder l'app Next.js (sortie dans apps/web/.next)
 pnpm --filter @jrdriving/web build
 ```
 
-For a static export of the public site (if you want to serve static files on Hostinger):
+Pour une exportation statique du site public (si vous souhaitez servir des fichiers statiques sur Hostinger) :
 ```bash
 pnpm --filter @jrdriving/web exec next export
 ```
-The generated `apps/web/out` directory can be uploaded to a static host.
+Le dossier généré `apps/web/out` peut être uploadé sur un hébergeur statique.
 
-### 6.2 Deploying the API (NestJS)
-1. Provision a Node-compatible host (VPS, Docker host, or Hostinger Node.js environment).
-2. Copy the following directories/files: `apps/api/dist`, `apps/api/package.json`, the workspace `pnpm-lock.yaml`, and `packages/shared` (for shared DTOs).
-3. Install production dependencies:
+### 6.2 Déployer l'API (NestJS)
+1. Provisionnez un hôte compatible Node (VPS, hôte Docker, ou environnement Node.js Hostinger).
+2. Copiez les répertoires/fichiers suivants : `apps/api/dist`, `apps/api/package.json`, le fichier `pnpm-lock.yaml` du workspace, et `packages/shared` (pour les DTOs partagés).
+3. Installez les dépendances de production :
    ```bash
    pnpm install --filter @jrdriving/api --prod
    ```
-4. Configure environment variables (`DATABASE_URL`, `JWT_SECRET`, `AUTH_COOKIE_NAME`, etc.).
-5. Run the API:
+4. Configurez les variables d'environnement (`DATABASE_URL`, `JWT_SECRET`, `AUTH_COOKIE_NAME`, etc.).
+5. Lancez l'API :
    ```bash
    pnpm --filter @jrdriving/api start
    ```
-   or `node dist/main.js` from inside `apps/api`.
+   ou `node dist/main.js` depuis `apps/api`.
 
-> ✅ Recommended: containerize the API and run it via Docker on the server for parity with local development. Build images from `docker/api.Dockerfile` and `docker/web.Dockerfile`.
+> ✅ Recommandation : containerisez l'API et exécutez-la via Docker sur le serveur pour garder la parité avec le développement local. Construisez les images à partir de `docker/api.Dockerfile` et `docker/web.Dockerfile`.
 
-### 6.3 Deploying the front-end
-- **Static hosting (Hostinger Business)**: Upload the `apps/web/out` directory contents to the public web root. Set `NEXT_PUBLIC_API_URL` to your public API URL before running `next export`.
-- **Node hosting (SSR)**: Upload the built `.next` folder along with `package.json` and run `pnpm start` in production mode.
+### 6.3 Déployer le front-end
+- **Hébergement statique (Hostinger Business)** : uploadez le contenu du dossier `apps/web/out` dans la racine publique. Définissez `NEXT_PUBLIC_API_URL` sur l'URL publique de votre API avant d'exécuter `next export`.
+- **Hébergement Node (SSR)** : uploadez le dossier `.next` construit ainsi que `package.json` et lancez `pnpm start` en mode production.
 
-### 6.4 Database migrations in production
-Use the same Drizzle commands pointed at your production database:
+### 6.4 Migrations de base de données en production
+Utilisez les mêmes commandes Drizzle en les pointant sur votre base de données de production :
 ```bash
 DATABASE_URL="mysql://user:pass@host:3306/db" pnpm --filter @jrdriving/api db:migrate
 ```
-(Prefer running this inside your deployment pipeline or directly on the server.)
+(Privilégiez l'exécution dans votre pipeline de déploiement ou directement sur le serveur.)
 
 ---
 
-## 7. Troubleshooting
+## 7. Dépannage
 
-| Issue | Fix |
+| Problème | Solution |
 | ----- | --- |
-| Containers fail with `EADDRINUSE` | Ensure ports 3000/4000/3306 are free or edit `docker-compose.yml`. |
-| `pnpm` command not found | Run `corepack enable` or install pnpm globally (`npm install -g pnpm`). |
-| Drizzle migration errors | Verify `DATABASE_URL` and that the database is reachable from the container/host. |
-| Next.js cannot reach the API | Confirm `NEXT_PUBLIC_API_URL` matches the API’s public URL and CORS is configured in the Nest app. |
+| Les conteneurs échouent avec `EADDRINUSE` | Assurez-vous que les ports 3000/4000/3306 sont libres ou modifiez `docker-compose.yml`. |
+| `pnpm` commande introuvable | Exécutez `corepack enable` ou installez pnpm globalement (`npm install -g pnpm`). |
+| Erreurs de migration Drizzle | Vérifiez `DATABASE_URL` et que la base est accessible depuis le conteneur/hôte. |
+| Next.js ne peut pas atteindre l'API | Confirmez que `NEXT_PUBLIC_API_URL` correspond à l'URL publique de l'API et que le CORS est configuré dans l'app Nest. |
 
 ---
 
-## 8. Useful commands quick reference
+## 8. Rappel des commandes utiles
+````markdown
 ```bash
-# Install dependencies
+# Installer les dépendances
 pnpm install
 
-# Start Docker stack
+# Démarrer la stack Docker
 docker compose up --build
 
-# Run API tests
+# Exécuter les tests API
 docker compose exec api pnpm test
 
-# Create a new migration
+# Créer une nouvelle migration
 docker compose exec api pnpm db:generate
 
-# Apply migrations
+# Appliquer les migrations
 pnpm --filter @jrdriving/api db:migrate
 
-# Build everything for production
+# Builder tout pour la production
 pnpm build
 ```
+````
 
 ---
 
-Happy hacking! Feel free to tailor the stack to your deployment environment and extend the modules/routes provided in the Nest API.
+Bon hacking ! N'hésitez pas à adapter la stack à votre environnement de déploiement et à étendre les modules/routes fournis dans l'API Nest.
