@@ -24,11 +24,11 @@ const signupSchema = credentialsSchema.extend({
 const router = Router();
 
 function setAuthCookie(res: import('express').Response, token: string) {
-  res.cookie(env.COOKIE_NAME, token, {
+  res.cookie(env.AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: env.NODE_ENV === 'production',
-    maxAge: env.COOKIE_MAX_AGE,
+    maxAge: env.AUTH_COOKIE_MAX_AGE * 1000,
   });
 }
 
@@ -127,7 +127,7 @@ router.post('/login', async (req, res, next) => {
 });
 
 router.get('/session', async (req, res) => {
-  const token = req.cookies?.[env.COOKIE_NAME];
+  const token = req.cookies?.[env.AUTH_COOKIE_NAME];
   if (!token) {
     return res.status(401).json({ message: 'Non authentifié.' });
   }
@@ -146,7 +146,7 @@ router.get('/session', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie(env.COOKIE_NAME, {
+  res.clearCookie(env.AUTH_COOKIE_NAME, {
     httpOnly: true,
     sameSite: 'lax',
     secure: env.NODE_ENV === 'production',

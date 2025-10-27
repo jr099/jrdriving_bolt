@@ -7,13 +7,18 @@ import adminRoutes from './routes/admin';
 import driverRoutes from './routes/drivers';
 import missionRoutes from './routes/missions';
 import quoteRoutes from './routes/quotes';
-import { env } from './env';
+import { env, corsOrigins } from './env';
 
 export const app = express();
 
 app.use(
   cors({
-    origin: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',') : true,
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      if (origin.startsWith('http://localhost')) return cb(null, true);
+      if (corsOrigins.has(origin)) return cb(null, true);
+      return cb(new Error('CORS not allowed'), false);
+    },
     credentials: true,
   })
 );
