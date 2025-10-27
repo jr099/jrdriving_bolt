@@ -1,0 +1,15 @@
+node_modules
+.pnpm-store
+.env
+.env.*
+*.log
+dist
+.next
+out
+coverage
+Dockerfile.local
+/apps/web/.next
+/apps/web/out
+/apps/api/dist
+/apps/api/drizzle
+/docker/mysql/data
